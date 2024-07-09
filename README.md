@@ -1,2 +1,4 @@
 # scipy-fft-processing-lib
-custom library for processing fft of impulses and audio files
+personal library for processing fft of impulses and audio files
+
+no dont use this its not finished
