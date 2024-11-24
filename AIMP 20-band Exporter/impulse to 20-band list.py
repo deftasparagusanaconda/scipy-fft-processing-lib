@@ -9,7 +9,7 @@ if len(sys.argv) == 1:
 else:
 	filepath = sys.argv[1]
 
-print("importing wav impulse...")
+print("importing", filepath)
 input = scipy.io.wavfile.read(filepath)
 print("done! now setting up variables...")
 
@@ -18,6 +18,11 @@ freq_high_limit = 15000
 sampling_rate  = input[0]
 sound = input[1]
 mono = sound[:,0]/2+sound[:,1]/2
+
+print("\nfreq_low_limit =", freq_low_limit)
+print("freq_high_limit =", freq_high_limit)
+print("sampling_rate =", sampling_rate)
+print("len(sound) =", len(sound))
 
 print("done! now performing real-domain fast fourier transform...")
 mono_rfft = scipy.fft.rfft(mono,norm="backward")
@@ -73,10 +78,12 @@ def nearest_two(target,list):
 print("done! now calculating indices of frequency limits...")
 freq_low_limit_log2 = math.log2(freq_low_limit)
 freq_high_limit_log2 = math.log2(freq_high_limit)
-l = nearest_two(freq_low_limit_log2,freq_log2)[0]
-h = nearest_two(freq_high_limit_log2,freq_log2)[1]
+l = nearest_two(freq_low_limit_log2,freq_log2)[0]+1
+h = nearest_two(freq_high_limit_log2,freq_log2)[1]+1
 
-print("done! now setting up conversion functions...")
+print("\nl =", l, "\t\t", freq[l])
+print("h =", h, "\t", freq[h])
+print("\nnow setting up conversion functions...")
 # convert a 20-value list to an EQ curve
 # uses linear interpolation
 def list_to_curve(arr):
@@ -146,16 +153,19 @@ plt.semilogx(freq[l:h+1],numpy.subtract(list_to_curve(AIMP_mag_dB),mono_mag_dB)[
 
 print("\nsetting up iterative error minimization algorithm...")
 
-step_size = 0.1
+step_size = 0.05
+
+print("stepping in sizes of", step_size)
 
 EQ_changes_dB = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
 hit_count = 0
 try_count = 0
 sweep_count = 0
+try_limit = 3000
 
 print("done! now sweeping...\n")
 
-while True:
+while try_count < try_limit:
 	changes = 0
 	for j in range(19):
 		try_count += 1
@@ -207,7 +217,7 @@ print("    hit count = ", hit_count, "/", try_count)
 
 ## output ----------------------------------------------------------------------
 
-print("\nfreq\t dB\t initial\tchanges")
+print("\nfreq\t dB\t first\tchanges")
 for i in range(20):
         print(round(AIMP_freq[i]), "\t", round(numpy.add(AIMP_mag_dB,EQ_changes_dB)[i],1), "\t", round(AIMP_mag_dB[i],1), "\t", round(EQ_changes_dB[i],1))
 
